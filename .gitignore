@@ -1,0 +1,23 @@
+# Backend
+backend/venv/
+__pycache__/
+*.pyc
+backend/uploads/
+backend/*.db
+backend/*.log
+.env
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/tsconfig.tsbuildinfo
+frontend/.eslintcache
+
+# Misc
+.DS_Store
+*.log
+.vscode/
+*.swp
+*.swo
+*~
