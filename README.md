@@ -84,16 +84,20 @@ python app.py                # http://localhost:5000
 cd frontend
 npm install
 npm run dev                  # http://localhost:3000
-```
+
 
 ### 4. Default Admin Login
 
 After running `schema.sql`, log in with the seeded admin (password set to `"admin"`; update via register endpoint or reset it before seeding):
 
-```
-Email: admin@portal.com
-Password: admin
-```
+
+### Authentication
+
+Authentication is handled through Supabase Auth.
+
+Administrator accounts are created and managed through Supabase Auth.
+No default administrator password is stored in the repository.
+
 
 ---
 
