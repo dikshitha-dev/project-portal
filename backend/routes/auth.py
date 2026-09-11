@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from models.user import User
 from utils.jwt import generate_token
+from utils.supabase import sync_user_to_supabase
 from middleware.auth import token_required, admin_required
 from extensions import db
 
@@ -48,10 +49,16 @@ def register():
     db.session.commit()
 
     token = generate_token(user.id, user.role)
+    user_dict = user.to_dict()
+    try:
+        sync_user_to_supabase(user_dict)
+    except Exception as e:
+        print(f"Supabase sync warning on register: {e}")
+
     return jsonify({
         "message": "User registered successfully",
         "token": token,
-        "user": user.to_dict(),
+        "user": user_dict,
     }), 201
 
 
@@ -74,10 +81,16 @@ def login():
         return jsonify({"error": "Invalid credentials. Please check your username/email and password."}), 401
 
     token = generate_token(user.id, user.role)
+    user_dict = user.to_dict()
+    try:
+        sync_user_to_supabase(user_dict)
+    except Exception as e:
+        print(f"Supabase sync warning on login: {e}")
+
     return jsonify({
         "message": "Login successful",
         "token": token,
-        "user": user.to_dict(),
+        "user": user_dict,
     }), 200
 
 

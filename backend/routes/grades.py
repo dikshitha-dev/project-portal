@@ -3,6 +3,7 @@ from models.grade import Grade
 from models.submission import Submission
 from models.week import Week
 from middleware.auth import token_required, admin_required
+from utils.supabase import sync_grade_to_supabase
 from extensions import db
 
 grades_bp = Blueprint("grades", __name__)
@@ -39,6 +40,11 @@ def create_or_update_grade(current_user):
 
         grade.calculate_total()
         db.session.commit()
+
+        try:
+            sync_grade_to_supabase(grade.to_dict())
+        except Exception as sync_err:
+            print(f"Supabase grade sync warning: {sync_err}")
 
         result = {
             **grade.to_dict(),
@@ -80,6 +86,11 @@ def publish_grade(current_user, submission_id):
     try:
         grade.published = True
         db.session.commit()
+
+        try:
+            sync_grade_to_supabase(grade.to_dict())
+        except Exception as sync_err:
+            print(f"Supabase grade publish sync warning: {sync_err}")
 
         submission = Submission.query.get(submission_id)
         result = {

@@ -3,6 +3,7 @@ from models.submission import Submission, ReviewFile
 from models.week import Week
 from middleware.auth import token_required, admin_required
 from utils.upload import save_file, get_file_url
+from utils.supabase import sync_submission_to_supabase
 from extensions import db
 
 submissions_bp = Blueprint("submissions", __name__)
@@ -119,6 +120,12 @@ def create_submission(current_user):
             db.session.add(review_file)
 
     db.session.commit()
+
+    try:
+        sync_submission_to_supabase(submission.to_dict())
+    except Exception as sync_err:
+        print(f"Supabase submission sync warning: {sync_err}")
+
     return jsonify({"message": "Project submitted successfully!", "submission": submission.to_dict()}), 201
 
 
@@ -219,6 +226,12 @@ def update_submission(current_user, submission_id):
             return jsonify({"error": "Please upload at least one project screenshot"}), 400
 
     db.session.commit()
+
+    try:
+        sync_submission_to_supabase(submission.to_dict())
+    except Exception as sync_err:
+        print(f"Supabase submission update sync warning: {sync_err}")
+
     return jsonify({"message": "Submission updated successfully", "submission": submission.to_dict()}), 200
 
 

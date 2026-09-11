@@ -52,9 +52,19 @@ export function getRoleRedirect(role: Role): string {
   return role === "admin" ? "/admin" : "/dashboard";
 }
 
+import { syncUserToSupabase } from "./supabase";
+
 export function saveAuth(token: string, user: User): void {
   setToken(token);
   setStoredUser(user);
+  if (user && user.id) {
+    syncUserToSupabase({
+      id: user.id,
+      name: user.name || user.email.split("@")[0],
+      email: user.email,
+      role: user.role || "candidate",
+    }).catch((err) => console.warn("Supabase user sync error:", err));
+  }
 }
 
 export function logout(redirectToLogin = true): void {
