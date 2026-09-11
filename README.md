@@ -1,131 +1,142 @@
-# Project Review & Mentorship Portal
+# 🚀 Project Review & Mentorship Portal
 
-A full-stack web app where candidates submit weekly project progress and mentors review it via annotations, issue cards, grading, and progress tracking.
-
-**Two roles:** Admin/Mentor and Candidate
+A comprehensive full-stack platform where candidates submit weekly project progress, and mentors review, annotate, grade, and track candidate growth. Fully integrated with **Supabase Backend** for authentication, live data synchronization, project tracking, and grade management.
 
 ---
 
-## Tech Stack
+## 🌟 Key Features
 
-| Layer       | Tech                          |
-|------------|-------------------------------|
-| Frontend   | Next.js 14, Tailwind CSS      |
-| Backend    | Flask (REST API)              |
-| Database   | PostgreSQL                    |
-| Auth       | JWT                           |
-| Annotation | Fabric.js                     |
-| Charts     | Recharts                      |
+- 🔐 **Authentication & User Management**
+  - Role-Based Access Control (**Admin/Mentor** and **Candidate**).
+  - Synchronized with **Supabase Backend** (`public.users` table & metadata).
+- 📅 **Weekly Roadmap & Projects**
+  - Admin creates weekly objectives, resources, and deadlines.
+  - Candidate project joining & discovery workflow.
+- 📤 **Weekly Submissions**
+  - Candidates submit GitHub repos, live project URLs, LinkedIn posts, reflections, and screenshots.
+- 🎨 **Mentor Review Workspace**
+  - Fabric.js canvas annotation tool (pen, circle, rect, arrow, highlight, text).
+  - Issue card management linked to visual canvas annotations.
+- 📊 **Grading System & Rubric**
+  - Interactive slider rubric with automatic total, percentage, and letter grade calculations.
+  - Real-time Supabase persistence & publishing state (`Draft` vs `Published`).
+- 📈 **Dashboards & Analytics**
+  - Candidate Dashboard: Progress trends, weekly grades, issue status.
+  - Admin Dashboard: Platform overview, pending reviews, candidate search & filter.
+- 🔔 **Notifications & Social Integration**
+  - Notification items for review updates.
+  - LinkedIn post draft review and admin approval workflow.
 
 ---
 
-## Features
+## 🛠️ Tech Stack
 
-- **Authentication** — JWT login & registration, role-based access
-- **Weekly Roadmap** — admin creates weeks (title, objective, resources, deadline)
-- **Weekly Submission** — candidate submits GitHub/deployed/LinkedIn URLs, screenshots, reflection
-- **Mentor Review Workspace** — Fabric.js canvas annotation (pen, circle, rect, arrow, highlight, text), issue cards linked to annotations
-- **Grading** — slider rubric, auto total/percentage/grade, save draft or publish
-- **Candidate Dashboard** — weekly improvement chart, grades, pending/resolved issues, feedback
-- **Admin Dashboard** — candidate stats, pending reviews, average grade, search & filter
+| Layer | Technology |
+| :--- | :--- |
+| **Frontend** | Next.js 14, React 18, Tailwind CSS, Recharts, Fabric.js |
+| **Backend** | Python Flask (REST API), SQLAlchemy |
+| **Database & Cloud** | Supabase (PostgreSQL, Real-time RLS, REST API) |
+| **Client Libraries** | `@supabase/supabase-js`, Axios, Lucide React |
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 project-review-portal/
-├── frontend/            # Next.js app
-│   ├── app/             # Pages (login, dashboard, week, submit, review, grades, admin, candidates)
-│   ├── components/      # Reusable UI components
-│   └── lib/             # Axios API client
-├── backend/             # Flask API
-│   ├── routes/          # auth, weeks, submissions, reviews, grades
-│   ├── models/          # user, week, submission, issue, grade
-│   ├── middleware/      # JWT auth
-│   └── utils/           # jwt, upload
-├── database/            # PostgreSQL schema
-├── docs/                # Project documentation
-└── README.md
+├── frontend/                # Next.js Application
+│   ├── app/                 # App Router Pages (login, dashboard, week, submit, review, grades, admin)
+│   ├── components/          # Reusable UI Components
+│   ├── lib/                 # Axios API Client & Supabase Client (supabase.ts, auth.ts)
+│   └── types/               # TypeScript Interface Definitions
+├── backend/                 # Flask Backend API
+│   ├── routes/              # API Endpoints (auth, weeks, submissions, reviews, grades, projects)
+│   ├── models/              # SQLAlchemy Database Models
+│   ├── utils/               # Supabase Sync Engine (supabase.py), Upload & JWT helpers
+│   ├── middleware/          # Role Verification & Auth Middlewares
+│   └── app.py               # Flask Application Entry Point
+├── database/                # Supabase Database Schema & Migration Scripts
+│   └── schema.sql           # Complete Supabase PostgreSQL Schema & RLS Policies
+└── docs/                    # Project Architecture & Design Documentation
 ```
 
 ---
 
-## Getting Started
+## ⚙️ Getting Started
 
-### 1. Database Setup
+### 1. Supabase Database Setup
 
-```bash
-# Create PostgreSQL database
-psql -U postgres -c "CREATE DATABASE project_portal;"
+1. Open your [Supabase Dashboard](https://supabase.com/dashboard).
+2. Navigate to the **SQL Editor**.
+3. Copy and run the entire [`database/schema.sql`](file:///c:/Users/Dikshitha%20Chiluveru/Desktop/project-review-portal/database/schema.sql) file to set up all tables (`users`, `weeks`, `submissions`, `review_files`, `annotations`, `issues`, `grades`) and Row Level Security (RLS) policies.
 
-# Apply schema
-psql -U postgres -d project_portal -f database/schema.sql
-```
-
-### 2. Backend
+### 2. Backend Setup
 
 ```bash
 cd backend
+
+# Create and activate virtual environment
 python -m venv venv
 venv\Scripts\activate        # Windows
+# source venv/bin/activate   # Linux/macOS
+
+# Install dependencies
 pip install -r requirements.txt
 
-# Configure environment
-set DATABASE_URL=postgresql://postgres:password@localhost:5432/project_portal
+# Create .env file with your credentials
+# SUPABASE_URL=https://<your-project-id>.supabase.co
+# SUPABASE_KEY=<your-supabase-publishable-key>
 
-# Run Flask
-python app.py                # http://localhost:5000
+# Run Flask server
+python app.py                # Runs on http://localhost:5000
 ```
 
-### 3. Frontend
+### 3. Frontend Setup
 
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
-npm run dev                  # http://localhost:3000
 
+# Create .env.local file with your credentials
+# NEXT_PUBLIC_SUPABASE_URL=https://<your-project-id>.supabase.co
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-publishable-key>
+# NEXT_PUBLIC_API_URL=http://localhost:5000/api
 
-### 4. Default Admin Login
-
-After running `schema.sql`, log in with the seeded admin (password set to `"admin"`; update via register endpoint or reset it before seeding):
-
-
-### Authentication
-
-Authentication is handled through Supabase Auth.
-
-Administrator accounts are created and managed through Supabase Auth.
-No default administrator password is stored in the repository.
-
+# Run Next.js development server
+npm run dev                  # Runs on http://localhost:3000
+```
 
 ---
 
-## Grading Rubric
+## 📐 Grading Rubric
 
-| Criteria        | Marks |
-| --------------- | ----- |
-| UI / UX         | 20    |
-| Functionality   | 25    |
-| GitHub Quality  | 15    |
-| Documentation   | 10    |
-| Innovation      | 20    |
-| Weekly Progress | 10    |
-| **Total**       | **100** |
+| Criteria | Max Marks | Description |
+| :--- | :---: | :--- |
+| **UI / UX** | 20 | Design aesthetics, responsiveness, layout |
+| **Functionality** | 25 | Working features, code correctness |
+| **GitHub Quality** | 15 | Commit quality, clean repo structure, README |
+| **Documentation** | 10 | Clarity of explanation, code comments |
+| **Innovation** | 20 | Creative problem solving, extra features |
+| **Weekly Progress** | 10 | Timely submissions & progress consistency |
+| **Total** | **100** | |
 
-**Grades:** 90+ → A+, 80+ → A, 70+ → B, 60+ → C, else Needs Improvement
+**Grade Breakdown:**
+- `90+` → **A+**
+- `80 - 89` → **A**
+- `70 - 79` → **B**
+- `60 - 69` → **C**
+- `< 60` → **Needs Improvement**
 
 ---
 
-## Documentation
+## 📚 Documentation
 
-See `/docs`:
-- 01_Project_Overview.md
-- 02_User_Flow.md
-- 03_Database.md
-- 04_API.md
-- 05_UI_Pages.md
-- 06_Features.md
-- UI-Design.md
-- API-Plan.md
-- Database-Design.md
+For full architectural details, see the `/docs` folder:
+- [01_Project_Overview.md](docs/01_Project_Overview.md)
+- [02_User_Flow.md](docs/02_User_Flow.md)
+- [03_Database.md](docs/03_Database.md)
+- [04_API.md](docs/04_API.md)
+- [05_UI_Pages.md](docs/05_UI_Pages.md)
+- [06_Features.md](docs/06_Features.md)

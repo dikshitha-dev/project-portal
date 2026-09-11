@@ -23,7 +23,7 @@ import {
 import { authAPI, LoginPayload, RegisterPayload, User } from "@/lib/api";
 import { getRoleRedirect, saveAuth } from "@/lib/auth";
 
-type Role = "admin" | "candidate";
+type Role = "admin" | "mentor" | "candidate";
 type AuthMode = "signin" | "signup";
 
 interface LoginFormProps {
@@ -164,13 +164,19 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     {
       value: "candidate",
       label: "Candidate",
-      desc: "Submit projects and track reviews",
+      desc: "Submit projects & track reviews",
       icon: GraduationCap,
     },
     {
+      value: "mentor",
+      label: "Mentor",
+      desc: "Evaluate assigned candidates",
+      icon: ShieldCheck,
+    },
+    {
       value: "admin",
-      label: "Mentor / Admin",
-      desc: "Review projects and provide feedback",
+      label: "Admin",
+      desc: "Platform administration",
       icon: ShieldCheck,
     },
   ];

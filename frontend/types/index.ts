@@ -5,14 +5,30 @@
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
+export type UserRole = "admin" | "mentor" | "candidate";
+
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: "admin" | "candidate";
+  role: UserRole;
   profile_image?: string | null;
   profileImage?: string | null;
   created_at?: string | null;
+}
+
+export interface Profile extends User {
+  updated_at?: string | null;
+}
+
+export interface MentorAssignment {
+  id: string;
+  mentor_id: string;
+  candidate_id: string;
+  project_id?: string | null;
+  created_at?: string;
+  mentor?: User;
+  candidate?: User;
 }
 
 export interface AuthResponse {
@@ -32,7 +48,7 @@ export interface RegisterPayload {
   username?: string;
   email?: string;
   password: string;
-  role?: "admin" | "candidate";
+  role?: UserRole;
 }
 
 // ─── Project ──────────────────────────────────────────────────────────────────

@@ -1,30 +1,16 @@
 /**
- * Typed Axios API client for the Project Review & Mentorship Portal.
- *
- * All TypeScript interfaces live in `@/types` — this file only contains
- * the Axios instance configuration and the grouped API function objects.
- *
- * Types are re-exported here so existing imports like:
- *   import { User, Submission } from "@/lib/api"
- * continue to work without any changes to consumer files.
+ * Supabase Data Access Layer Compatibility Wrapper for Project Review Portal.
+ * Wraps service modules with Axios-compatible `{ data }` response structures.
  */
-import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
-import type {
-  AuthResponse,
-  LoginPayload,
-  RegisterPayload,
-  User,
-  Week,
-  Project,
-  ProjectMember,
-  ProjectJoinRequest,
-  NotificationItem,
-  Submission,
-  Annotation,
-  Issue,
-  Grade,
-  PostSubmission,
-} from "@/types";
+import { authService } from "./services/auth";
+import { weeksService } from "./services/weeks";
+import { projectsService } from "./services/projects";
+import { submissionsService } from "./services/submissions";
+import { reviewsService } from "./services/reviews";
+import { gradesService } from "./services/grades";
+import { notificationsService } from "./services/notifications";
+import { linkedinService } from "./services/linkedin";
+import { profilesService } from "./services/profiles";
 
 // ─── Re-export all types (backward compatible) ────────────────────────────────
 export type {
@@ -48,283 +34,219 @@ export type {
   PostSubmission,
 } from "@/types";
 
-// ─── Axios Client ─────────────────────────────────────────────────────────────
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-
-/**
- * Typed Axios client pre-configured with the backend base URL and JWT handling.
- * Attaches the auth token from localStorage to every request and auto-redirects
- * to /login when the token is missing, expired, or invalid (401).
- */
-export const api: AxiosInstance = axios.create({
-  baseURL: API_BASE,
-  headers: { "Content-Type": "application/json" },
-});
-
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = window.localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
-  return config;
-});
-
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const status = error?.response?.status;
-    if (status === 401) {
-      if (typeof window !== "undefined") {
-        window.localStorage.removeItem("token");
-        window.localStorage.removeItem("user");
-        window.location.href = "/login";
-      }
-    }
-    return Promise.reject(error);
-  }
-);
-
-/** A typed wrapper around an Axios request for readable generic usage. */
-export async function request<T>(config: AxiosRequestConfig): Promise<T> {
-  const response = await api.request<T>(config);
-  return response.data;
-}
-
-// ─── API Groups ───────────────────────────────────────────────────────────────
+// ─── API Compatibility Layer (Axios Data-Wrapped) ──────────────────────────────
 
 export const authAPI = {
-  login: (data: LoginPayload) => api.post<AuthResponse>("/auth/login", data),
-  register: (data: RegisterPayload) =>
-    api.post<AuthResponse>("/auth/register", data),
-  getMe: () => api.get<{ user: User }>("/auth/me"),
-  getCandidates: () =>
-    api.get<{ candidates: User[] }>("/auth/candidates"),
-  getCandidate: (id: string) =>
-    api.get<{ candidate: User }>(`/auth/candidates/${id}`),
+  login: async (data: Parameters<typeof authService.login>[0]) => ({
+    data: await authService.login(data),
+  }),
+  register: async (data: Parameters<typeof authService.register>[0]) => ({
+    data: await authService.register(data),
+  }),
+  getMe: async () => ({
+    data: await authService.getMe(),
+  }),
+  getCandidates: async () => ({
+    data: await authService.getCandidates(),
+  }),
+  getCandidate: async (id: string) => ({
+    data: await authService.getCandidate(id),
+  }),
 };
 
 export const weeksAPI = {
-  getAll: (projectId?: string) =>
-    api.get<{ weeks: Week[] }>("/weeks/", {
-      params: projectId ? { project_id: projectId } : {},
-    }),
-  getOne: (id: string) => api.get<{ week: Week }>(`/weeks/${id}`),
-  create: (data: Partial<Week>) => api.post<{ week: Week }>("/weeks/", data),
-  update: (id: string, data: Partial<Week>) =>
-    api.put<{ week: Week }>(`/weeks/${id}`, data),
-  delete: (id: string) => api.delete(`/weeks/${id}`),
+  getAll: async (projectId?: string) => ({
+    data: await weeksService.getAll(projectId),
+  }),
+  getOne: async (id: string) => ({
+    data: await weeksService.getOne(id),
+  }),
+  create: async (data: Parameters<typeof weeksService.create>[0]) => ({
+    data: await weeksService.create(data),
+  }),
+  update: async (id: string, data: Parameters<typeof weeksService.update>[1]) => ({
+    data: await weeksService.update(id, data),
+  }),
+  delete: async (id: string) => ({
+    data: await weeksService.delete(id),
+  }),
 };
 
 export const projectsAPI = {
-  getAll: (search?: string) =>
-    api.get<{ projects: Project[] }>("/projects/", {
-      params: search ? { search } : {},
-    }),
-  getDiscover: (search?: string) =>
-    api.get<{ projects: Project[] }>("/projects/discover", {
-      params: search ? { search } : {},
-    }),
-  getMyRequests: () =>
-    api.get<{ requests: ProjectJoinRequest[] }>("/projects/my-requests"),
-  getOne: (id: string) => api.get<{ project: Project }>(`/projects/${id}`),
-  create: (data: { name: string; description?: string; public_joining?: boolean }) =>
-    api.post<{ message: string; project: Project }>("/projects/", data),
-  update: (id: string, data: Partial<Project>) =>
-    api.put<{ message: string; project: Project }>(`/projects/${id}`, data),
-  delete: (id: string) => api.delete<{ message: string }>(`/projects/${id}`),
-  regenerateCode: (id: string) =>
-    api.post<{ message: string; invite_code: string }>(
-      `/projects/${id}/regenerate-code`
-    ),
-  submitJoinRequest: (invite_code: string) =>
-    api.post<{
-      message: string;
-      project_name?: string;
-      project_id?: string;
-      status?: string;
-    }>("/projects/join-request", { invite_code }),
-  joinPublic: (projectId: string) =>
-    api.post<{
-      message: string;
-      project_name?: string;
-      project_id?: string;
-      status?: string;
-    }>(`/projects/${projectId}/join`),
-  cancelJoinRequest: (projectId: string) =>
-    api.post<{ message: string; status?: string }>(
-      `/projects/${projectId}/join-requests/cancel`
-    ),
-  acceptJoinRequest: (projectId: string, requestId: string) =>
-    api.post<{ message: string; status?: string }>(
-      `/projects/${projectId}/join-requests/${requestId}/accept`
-    ),
-  rejectJoinRequest: (
-    projectId: string,
-    requestId: string,
-    feedback?: string
-  ) =>
-    api.post<{ message: string; status?: string }>(
-      `/projects/${projectId}/join-requests/${requestId}/reject`,
-      { feedback }
-    ),
-  addMember: (
-    projectId: string,
-    data: { email?: string; username?: string; role?: string }
-  ) =>
-    api.post<{ message: string; member: ProjectMember }>(
-      `/projects/${projectId}/members`,
-      data
-    ),
-  removeMember: (projectId: string, memberId: string) =>
-    api.delete<{ message: string }>(
-      `/projects/${projectId}/members/${memberId}`
-    ),
-  getWeeks: (projectId: string) =>
-    api.get<{ weeks: Week[] }>(`/projects/${projectId}/weeks`),
+  getAll: async (search?: string) => ({
+    data: await projectsService.getAll(search),
+  }),
+  getDiscover: async (search?: string) => ({
+    data: await projectsService.getDiscover(search),
+  }),
+  getMyRequests: async () => ({
+    data: await projectsService.getMyRequests(),
+  }),
+  getOne: async (id: string) => ({
+    data: await projectsService.getOne(id),
+  }),
+  create: async (data: Parameters<typeof projectsService.create>[0]) => ({
+    data: await projectsService.create(data),
+  }),
+  update: async (id: string, data: Parameters<typeof projectsService.update>[1]) => ({
+    data: await projectsService.update(id, data),
+  }),
+  delete: async (id: string) => ({
+    data: await projectsService.delete(id),
+  }),
+  submitJoinRequest: async (inviteCode: string) => ({
+    data: await projectsService.submitJoinRequest(inviteCode),
+  }),
+  joinPublic: async (projectId: string) => ({
+    data: await projectsService.joinPublic(projectId),
+  }),
+  cancelJoinRequest: async (projectId: string) => ({
+    data: await projectsService.cancelJoinRequest(projectId),
+  }),
+  acceptJoinRequest: async (projectId: string, requestId: string) => ({
+    data: await projectsService.acceptJoinRequest(projectId, requestId),
+  }),
+  rejectJoinRequest: async (projectId: string, requestId: string, feedback?: string) => ({
+    data: await projectsService.rejectJoinRequest(projectId, requestId, feedback),
+  }),
+  getWeeks: async (projectId: string) => ({
+    data: await projectsService.getWeeks(projectId),
+  }),
+  regenerateCode: async (id: string) => ({
+    data: await projectsService.regenerateCode(id),
+  }),
+  addMember: async (projectId: string, data: Parameters<typeof projectsService.addMember>[1]) => ({
+    data: await projectsService.addMember(projectId, data),
+  }),
+  removeMember: async (projectId: string, memberId: string) => ({
+    data: await projectsService.removeMember(projectId, memberId),
+  }),
 };
 
 export const notificationsAPI = {
-  getAll: () =>
-    api.get<{ notifications: NotificationItem[]; unread_count: number }>(
-      "/notifications/"
-    ),
-  markAsRead: (id: string) =>
-    api.post<{ message: string }>(`/notifications/${id}/read`),
-  markAllAsRead: () =>
-    api.post<{ message: string }>("/notifications/read-all"),
-  delete: (id: string) =>
-    api.delete<{ message: string }>(`/notifications/${id}`),
+  getAll: async () => ({
+    data: await notificationsService.getAll(),
+  }),
+  markAsRead: async (id: string) => ({
+    data: await notificationsService.markAsRead(id),
+  }),
+  markAllAsRead: async () => ({
+    data: await notificationsService.markAllAsRead(),
+  }),
+  delete: async (id: string) => ({
+    data: await notificationsService.delete(id),
+  }),
 };
 
 export const submissionsAPI = {
-  create: (formData: FormData) =>
-    api.post<{ submission: Submission }>("/submissions/", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  getAll: (projectId?: string) =>
-    api.get<{ submissions: Submission[] }>("/submissions/", {
-      params: projectId ? { project_id: projectId } : {},
-    }),
-  getOne: (id: string) =>
-    api.get<{ submission: Submission }>(`/submissions/${id}`),
-  update: (id: string, data: Partial<Submission> | FormData) => {
-    if (data instanceof FormData) {
-      return api.put<{ message: string; submission: Submission }>(
-        `/submissions/${id}`,
-        data,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-    }
-    return api.put<{ message: string; submission: Submission }>(
-      `/submissions/${id}`,
-      data
-    );
-  },
-  deleteScreenshot: (submissionId: string, fileId: string) =>
-    api.delete<{ message: string }>(
-      `/submissions/${submissionId}/screenshots/${fileId}`
-    ),
-  uploadScreenshots: (id: string, formData: FormData) =>
-    api.post(`/submissions/${id}/screenshots`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  getByWeek: (weekId: string) =>
-    api.get<{ submissions: Submission[] }>(`/submissions/week/${weekId}`),
-  getByCandidate: (candidateId: string, projectId?: string) =>
-    api.get<{ submissions: Submission[] }>(
-      `/submissions/candidate/${candidateId}`,
-      { params: projectId ? { project_id: projectId } : {} }
-    ),
+  create: async (formData: FormData) => ({
+    data: await submissionsService.create(formData),
+  }),
+  getAll: async (projectId?: string) => ({
+    data: await submissionsService.getAll(projectId),
+  }),
+  getOne: async (id: string) => ({
+    data: await submissionsService.getOne(id),
+  }),
+  update: async (id: string, data: Parameters<typeof submissionsService.update>[1]) => ({
+    data: await submissionsService.update(id, data),
+  }),
+  deleteScreenshot: async (submissionId: string, fileId: string) => ({
+    data: await submissionsService.deleteScreenshot(submissionId, fileId),
+  }),
+  uploadScreenshots: async (id: string, formData: FormData) => ({
+    data: await submissionsService.uploadScreenshots(id, formData),
+  }),
+  getByWeek: async (weekId: string) => ({
+    data: await submissionsService.getByWeek(weekId),
+  }),
+  getByCandidate: async (candidateId: string, projectId?: string) => ({
+    data: await submissionsService.getByCandidate(candidateId, projectId),
+  }),
 };
 
 export const reviewsAPI = {
-  getAnnotations: (imageId: string) =>
-    api.get<{ annotations: Annotation[] }>(`/reviews/annotations/${imageId}`),
-  createAnnotation: (data: Record<string, unknown>) =>
-    api.post<{ annotation: Annotation }>("/reviews/annotations", data),
-  updateAnnotation: (id: string, data: Record<string, unknown>) =>
-    api.put<{ annotation: Annotation }>(`/reviews/annotations/${id}`, data),
-  deleteAnnotation: (id: string) => api.delete(`/reviews/annotations/${id}`),
-  createIssue: (data: Partial<Issue>) =>
-    api.post<{ issue: Issue }>("/reviews/issues", data),
-  updateIssue: (id: string, data: Partial<Issue>) =>
-    api.put<{ issue: Issue }>(`/reviews/issues/${id}`, data),
-  deleteIssue: (id: string) => api.delete(`/reviews/issues/${id}`),
-  getIssuesBySubmission: (submissionId: string) =>
-    api.get<{ issues: Issue[] }>(`/reviews/issues/submission/${submissionId}`),
-  getIssuesByCandidate: (candidateId: string) =>
-    api.get<{ issues: Issue[] }>(`/reviews/issues/candidate/${candidateId}`),
-  uploadReference: (formData: FormData) =>
-    api.post<{ url: string }>("/reviews/reference-upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
+  getAnnotations: async (imageId: string) => ({
+    data: await reviewsService.getAnnotations(imageId),
+  }),
+  createAnnotation: async (data: Record<string, unknown>) => ({
+    data: await reviewsService.createAnnotation(data),
+  }),
+  updateAnnotation: async (id: string, data: Record<string, unknown>) => ({
+    data: await reviewsService.updateAnnotation(id, data),
+  }),
+  deleteAnnotation: async (id: string) => ({
+    data: await reviewsService.deleteAnnotation(id),
+  }),
+  createIssue: async (data: Parameters<typeof reviewsService.createIssue>[0]) => ({
+    data: await reviewsService.createIssue(data),
+  }),
+  updateIssue: async (id: string, data: Parameters<typeof reviewsService.updateIssue>[1]) => ({
+    data: await reviewsService.updateIssue(id, data),
+  }),
+  deleteIssue: async (id: string) => ({
+    data: await reviewsService.deleteIssue(id),
+  }),
+  getIssuesBySubmission: async (submissionId: string) => ({
+    data: await reviewsService.getIssuesBySubmission(submissionId),
+  }),
+  getIssuesByCandidate: async (candidateId: string) => ({
+    data: await reviewsService.getIssuesByCandidate(candidateId),
+  }),
 };
 
 export const gradesAPI = {
-  createOrUpdate: (data: Record<string, unknown>) =>
-    api.post<{ grade: Grade }>("/grades/", data),
-  getBySubmission: (submissionId: string) =>
-    api.get<{ grade: Grade }>(`/grades/submission/${submissionId}`),
-  publish: (submissionId: string) =>
-    api.post<{ grade: Grade }>(`/grades/publish/${submissionId}`),
-  getCandidateGrades: (candidateId: string, projectId?: string) =>
-    api.get<{ grades: Grade[] }>(`/grades/candidate/${candidateId}`, {
-      params: projectId ? { project_id: projectId } : {},
-    }),
-  getAll: () => api.get<{ grades: Grade[] }>("/grades/all"),
-  getCandidateStats: (candidateId: string, projectId?: string) =>
-    api.get(`/grades/stats/candidate/${candidateId}`, {
-      params: projectId ? { project_id: projectId } : {},
-    }),
-  getOverviewStats: () => api.get("/grades/stats/overview"),
+  createOrUpdate: async (data: Record<string, unknown>) => ({
+    data: await gradesService.createOrUpdate(data),
+  }),
+  getBySubmission: async (submissionId: string) => ({
+    data: await gradesService.getBySubmission(submissionId),
+  }),
+  publish: async (submissionId: string) => ({
+    data: await gradesService.publish(submissionId),
+  }),
+  getCandidateGrades: async (candidateId: string, projectId?: string) => ({
+    data: await gradesService.getCandidateGrades(candidateId, projectId),
+  }),
+  getAll: async () => ({
+    data: await gradesService.getAll(),
+  }),
+  getCandidateStats: async (candidateId: string, projectId?: string) => ({
+    data: await gradesService.getCandidateStats(candidateId, projectId),
+  }),
+  getOverviewStats: async () => ({
+    data: await gradesService.getOverviewStats(),
+  }),
 };
 
 export const linkedinAPI = {
-  candidateGetSubmissions: () =>
-    api.get<{ submissions: PostSubmission[] }>("/linkedin/candidate/submissions"),
-  getSubmission: (id: string) =>
-    api.get<{ submission: PostSubmission }>(`/linkedin/submissions/${id}`),
-  uploadMedia: (formData: FormData) =>
-    api.post<{ urls: string[]; message: string }>("/linkedin/upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  saveDraft: (data: Partial<PostSubmission> & { media_urls?: string[] }) =>
-    api.post<{ submission: PostSubmission; message: string }>(
-      "/linkedin/draft",
-      data
-    ),
-  submitForApproval: (
-    data: Partial<PostSubmission> & { media_urls?: string[] }
-  ) =>
-    api.post<{ submission: PostSubmission; message: string }>(
-      "/linkedin/submit",
-      data
-    ),
-  resubmit: (
-    id: string,
-    data: Partial<PostSubmission> & { media_urls?: string[] }
-  ) =>
-    api.post<{ submission: PostSubmission; message: string }>(
-      `/linkedin/resubmit/${id}`,
-      data
-    ),
-  adminGetSubmissions: (statusFilter?: string) =>
-    api.get<{ submissions: PostSubmission[] }>("/linkedin/admin/submissions", {
-      params: statusFilter ? { status: statusFilter } : {},
-    }),
-  adminReviewSubmission: (
-    id: string,
-    payload: { decision: "Approved" | "Needs Changes"; feedback?: string }
-  ) =>
-    api.post<{ submission: PostSubmission; message: string }>(
-      `/linkedin/admin/submissions/${id}/review`,
-      payload
-    ),
-  adminMarkViewed: (id: string) =>
-    api.post(`/linkedin/admin/submissions/${id}/view`),
+  candidateGetSubmissions: async () => ({
+    data: await linkedinService.candidateGetSubmissions(),
+  }),
+  getSubmission: async (id: string) => ({
+    data: await linkedinService.getSubmission(id),
+  }),
+  uploadMedia: async (formData: FormData) => ({
+    data: await linkedinService.uploadMedia(formData),
+  }),
+  saveDraft: async (data: Parameters<typeof linkedinService.saveDraft>[0]) => ({
+    data: await linkedinService.saveDraft(data),
+  }),
+  submitForApproval: async (data: Parameters<typeof linkedinService.submitForApproval>[0]) => ({
+    data: await linkedinService.submitForApproval(data),
+  }),
+  resubmit: async (id: string, data: Parameters<typeof linkedinService.resubmit>[1]) => ({
+    data: await linkedinService.resubmit(id, data),
+  }),
+  adminGetSubmissions: async (statusFilter?: string) => ({
+    data: await linkedinService.adminGetSubmissions(statusFilter),
+  }),
+  adminReviewSubmission: async (id: string, payload: Parameters<typeof linkedinService.adminReviewSubmission>[1]) => ({
+    data: await linkedinService.adminReviewSubmission(id, payload),
+  }),
+  adminMarkViewed: async (id: string) => ({
+    data: await linkedinService.adminMarkViewed(id),
+  }),
 };
 
-export default api;
+export { profilesService };

@@ -6,8 +6,8 @@ from urllib.error import HTTPError, URLError
 
 logger = logging.getLogger("supabase_sync")
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://hwquhsopaceqbfczfnyi.supabase.co").rstrip("/")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "sb_publishable_Lnyl1zL2_L4RhtBVmP1yog_LdjvEfhG")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 
 
 def _send_supabase_request(endpoint: str, method: str = "POST", data: dict = None):

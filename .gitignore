@@ -1,3 +1,12 @@
+# Environment & Secret files
+.env
+.env.local
+.env.*.local
+*.env
+frontend/.env.local
+frontend/.env*.local
+backend/.env
+
 # Backend
 backend/venv/
 __pycache__/
@@ -5,7 +14,6 @@ __pycache__/
 backend/uploads/
 backend/*.db
 backend/*.log
-.env
 
 # Frontend
 frontend/node_modules/

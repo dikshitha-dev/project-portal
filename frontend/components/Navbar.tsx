@@ -146,6 +146,30 @@ export default function Navbar() {
           </div>
         </Link>
 
+        {/* Center Nav Links */}
+        {user && (
+          <div className="hidden md:flex items-center gap-4 text-xs font-semibold text-gray-600">
+            {user.role === "admin" && (
+              <Link href="/admin" className="hover:text-primary-600 transition-colors">
+                Admin Dashboard
+              </Link>
+            )}
+            {user.role === "mentor" && (
+              <Link href="/mentor" className="hover:text-primary-600 transition-colors">
+                Mentor Dashboard
+              </Link>
+            )}
+            {(user.role === "candidate" || user.role === "admin") && (
+              <Link href="/dashboard" className="hover:text-primary-600 transition-colors">
+                Candidate Dashboard
+              </Link>
+            )}
+            <Link href="/projects/discover" className="hover:text-primary-600 transition-colors">
+              Discover Projects
+            </Link>
+          </div>
+        )}
+
         {/* Right side */}
         <div className="flex items-center gap-3">
           {user && (
