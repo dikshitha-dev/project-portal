@@ -4,27 +4,27 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import LoginForm from "@/components/LoginForm";
 import Hero3DVisual from "@/components/Hero3DVisual";
-import { isAuthenticated, getRoleRedirect } from "@/lib/auth";
+import { supabase } from "@/lib/supabase/client";
+import { getRoleRedirectUrl } from "@/constants/roles";
 import { Sparkles, ChevronRight } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (isAuthenticated()) {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        try {
-          const user = JSON.parse(stored);
-          if (user?.role) {
-            router.replace(getRoleRedirect(user.role as "admin" | "candidate"));
-            return;
-          }
-        } catch {
-          localStorage.removeItem("user");
-        }
+    async function checkExistingSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+        const role = profile?.role || "candidate";
+        router.replace(getRoleRedirectUrl(role as any));
       }
     }
+    checkExistingSession();
   }, [router]);
 
   return (

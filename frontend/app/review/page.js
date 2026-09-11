@@ -13,6 +13,7 @@ import {
   SubmissionDetailView,
 } from "@/components";
 import { reviewsAPI, submissionsAPI } from "@/lib/api";
+import { authService } from "@/lib/services/auth";
 import {
   Image as ImageIcon,
   Check,
@@ -24,17 +25,7 @@ import {
 
 function getFullImageUrl(url) {
   if (!url) return "";
-  if (
-    url.startsWith("http://") ||
-    url.startsWith("https://") ||
-    url.startsWith("data:") ||
-    url.startsWith("blob:")
-  ) {
-    return url;
-  }
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-  const backendBase = apiBase.replace(/\/api\/?$/, "");
-  return `${backendBase}${url.startsWith("/") ? "" : "/"}${url}`;
+  return url;
 }
 
 // Distance from point (px, py) to line segment (x1, y1)-(x2, y2)
@@ -240,11 +231,11 @@ export default function ReviewPage() {
   // 1. Initial Data Fetching
   // -------------------------------------------------------------
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
-
     const load = async () => {
       try {
+        const { user: currentUser } = await authService.getMe().catch(() => ({ user: null }));
+        if (currentUser) setUser(currentUser);
+
         const res = await submissionsAPI.getAll();
         const subs = res.data.submissions || [];
         setSubmissions(subs);

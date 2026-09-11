@@ -9,6 +9,7 @@ import {
   LoadingSkeleton,
 } from "@/components";
 import { gradesAPI, submissionsAPI, authAPI, reviewsAPI, projectsAPI } from "@/lib/api";
+import { authService } from "@/lib/services/auth";
 import {
   Star,
   CheckCircle2,
@@ -44,8 +45,9 @@ export default function GradesPage() {
   const role = user?.role;
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
+    authService.getMe().then(({ user }) => {
+      if (user) setUser(user);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {

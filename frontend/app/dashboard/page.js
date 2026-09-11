@@ -16,7 +16,7 @@ import {
   submissionsAPI,
   projectsAPI,
 } from "@/lib/api";
-import { getStoredUser } from "@/lib/auth";
+import { authService } from "@/lib/services/auth";
 import {
   ArrowUpRight,
   CheckCircle,
@@ -57,16 +57,14 @@ function CandidateDashboardContent() {
   const [joinMsg, setJoinMsg] = useState(null);
 
   const fetchDashboardData = useCallback(async () => {
-    const activeUser = getStoredUser();
-    if (activeUser) {
-      setUser(activeUser);
-    }
-    if (!activeUser || !activeUser.id) {
-      setLoading(false);
-      return;
-    }
-
     try {
+      const { user: activeUser } = await authService.getMe();
+      if (!activeUser || !activeUser.id) {
+        setLoading(false);
+        return;
+      }
+      setUser(activeUser);
+
       const [projectsRes, discoverRes, gradesRes, issuesRes, subsRes, statsRes] =
         await Promise.all([
           projectsAPI.getAll().catch(() => ({ data: { projects: [] } })),

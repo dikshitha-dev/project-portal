@@ -13,6 +13,7 @@ import {
   SearchInput,
 } from "@/components";
 import { Project, projectsAPI, User } from "@/lib/api";
+import { authService } from "@/lib/services/auth";
 import {
   Plus,
   Search,
@@ -82,16 +83,11 @@ function ProjectsDashboardContent() {
     }
   }, [searchParams]);
 
-  // Load user from localStorage
+  // Load user
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        setCurrentUser(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    authService.getMe().then(({ user }) => {
+      if (user) setCurrentUser(user);
+    }).catch(() => {});
   }, []);
 
   // Fetch projects

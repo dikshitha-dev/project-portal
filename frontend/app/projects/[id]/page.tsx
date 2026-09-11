@@ -24,6 +24,7 @@ import {
   User,
   Issue,
 } from "@/lib/api";
+import { authService } from "@/lib/services/auth";
 import {
   ArrowLeft,
   Calendar,
@@ -78,12 +79,9 @@ export default function CandidateProjectWorkspacePage() {
   const [isEditingSubmit, setIsEditingSubmit] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored) setCurrentUser(JSON.parse(stored));
-    } catch (e) {
-      console.error(e);
-    }
+    authService.getMe().then(({ user }) => {
+      if (user) setCurrentUser(user);
+    }).catch(() => {});
   }, []);
 
   // Set active project in localStorage
@@ -120,8 +118,7 @@ export default function CandidateProjectWorkspacePage() {
       setWeeks(finalWeeks);
 
       // Fetch candidate submissions and grades for this project
-      const stored = localStorage.getItem("user");
-      const u = stored ? JSON.parse(stored) : null;
+      const { user: u } = await authService.getMe().catch(() => ({ user: null }));
       if (u?.id) {
         const [subsRes, gradesRes, issuesRes] = await Promise.all([
           submissionsAPI.getByCandidate(u.id, projectId),

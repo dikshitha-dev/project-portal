@@ -21,7 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { authAPI, LoginPayload, RegisterPayload, User } from "@/lib/api";
-import { getRoleRedirect, saveAuth } from "@/lib/auth";
+import { getRoleRedirectUrl } from "@/constants/roles";
 
 type Role = "admin" | "mentor" | "candidate";
 type AuthMode = "signin" | "signup";
@@ -81,19 +81,21 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
     try {
       const res = await authAPI.login(payload);
-      const { token, user } = res.data;
-      saveAuth(token, user);
+      const { user } = res.data;
       if (rememberMe) {
         localStorage.setItem("remember_username", identifier.trim());
       } else {
         localStorage.removeItem("remember_username");
       }
       onSuccess?.(user);
-      router.push(getRoleRedirect(user.role));
+      router.push(getRoleRedirectUrl(user.role));
     } catch (err: unknown) {
       setError(
-        (err as { response?: { data?: { error?: string } } })?.response?.data
-          ?.error ?? "Login failed. Please verify your credentials."
+        (err as { message?: string; response?: { data?: { error?: string } } })
+          ?.message ||
+          (err as { response?: { data?: { error?: string } } })?.response?.data
+            ?.error ||
+          "Login failed. Please verify your credentials."
       );
     } finally {
       setLoading(false);
@@ -131,14 +133,16 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
     try {
       const res = await authAPI.register(payload);
-      const { token, user } = res.data;
-      saveAuth(token, user);
+      const { user } = res.data;
       onSuccess?.(user);
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(
-        (err as { response?: { data?: { error?: string } } })?.response?.data
-          ?.error ?? "Registration failed. Please try again."
+        (err as { message?: string; response?: { data?: { error?: string } } })
+          ?.message ||
+          (err as { response?: { data?: { error?: string } } })?.response?.data
+            ?.error ||
+          "Registration failed. Please try again."
       );
     } finally {
       setLoading(false);

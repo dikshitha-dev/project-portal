@@ -30,17 +30,7 @@ interface SubmissionDetailViewProps {
 
 function getFullImageUrl(url: string): string {
   if (!url) return "";
-  if (
-    url.startsWith("http://") ||
-    url.startsWith("https://") ||
-    url.startsWith("data:") ||
-    url.startsWith("blob:")
-  ) {
-    return url;
-  }
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-  const backendBase = apiBase.replace(/\/api\/?$/, "");
-  return `${backendBase}${url.startsWith("/") ? "" : "/"}${url}`;
+  return url;
 }
 
 export default function SubmissionDetailView({

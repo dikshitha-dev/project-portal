@@ -1,42 +1,75 @@
 # 🚀 Project Review & Mentorship Portal
 
-A comprehensive full-stack platform where candidates submit weekly project progress, and mentors review, annotate, grade, and track candidate growth. Fully integrated with **Supabase Backend** for authentication, live data synchronization, project tracking, and grade management.
+A comprehensive full-stack platform where candidates submit weekly project progress, and mentors review, annotate, grade, and track candidate growth. Built with **Next.js 14 App Router** and fully powered by **Supabase** for Auth, PostgreSQL database, RLS authorization, and Storage.
 
 ---
 
 ## 🌟 Key Features
 
-- 🔐 **Authentication & User Management**
-  - Role-Based Access Control (**Admin/Mentor** and **Candidate**).
-  - Synchronized with **Supabase Backend** (`public.users` table & metadata).
+- 🔐 **Supabase Authentication & Role Management**
+  - Native Supabase Auth (`@supabase/ssr`) for candidates, mentors, and admins.
+  - Role-Based Access Control (`admin`, `mentor`, `candidate`) driven directly by `public.profiles`.
+  - Automatic profile creation upon registration (`on_auth_user_created` trigger).
 - 📅 **Weekly Roadmap & Projects**
-  - Admin creates weekly objectives, resources, and deadlines.
-  - Candidate project joining & discovery workflow.
+  - Admin creates projects, weekly objectives, resources, and deadlines.
+  - Candidate project joining with invite codes & discovery workflow.
 - 📤 **Weekly Submissions**
   - Candidates submit GitHub repos, live project URLs, LinkedIn posts, reflections, and screenshots.
 - 🎨 **Mentor Review Workspace**
-  - Fabric.js canvas annotation tool (pen, circle, rect, arrow, highlight, text).
+  - Canvas annotation tool (pen, circle, rect, arrow, highlight, text).
   - Issue card management linked to visual canvas annotations.
 - 📊 **Grading System & Rubric**
   - Interactive slider rubric with automatic total, percentage, and letter grade calculations.
-  - Real-time Supabase persistence & publishing state (`Draft` vs `Published`).
-- 📈 **Dashboards & Analytics**
-  - Candidate Dashboard: Progress trends, weekly grades, issue status.
-  - Admin Dashboard: Platform overview, pending reviews, candidate search & filter.
+  - PostgreSQL RLS enforces draft vs published grade visibility for candidates.
+- 📈 **Dashboards & Access Control**
+  - **Candidate Portal**: Only candidate's own data (`Candidate A ≠ Candidate B`).
+  - **Mentor Portal**: Restricted to candidates assigned via `mentor_assignments`.
+  - **Admin Portal**: Platform overview, pending reviews, user role management & project control.
 - 🔔 **Notifications & Social Integration**
-  - Notification items for review updates.
+  - Real-time review notification updates.
   - LinkedIn post draft review and admin approval workflow.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Architecture & Tech Stack
+
+```text
+                    ┌─────────────────┐
+                    │  Next.js 14 UI  │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │  Supabase Auth  │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │    profiles     │
+                    │ role management │
+                    └────────┬────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+          Candidate        Mentor         Admin
+              │              │              │
+              └──────────────┼──────────────┘
+                             │
+                    ┌────────▼────────┐
+                    │ PostgreSQL + RLS│
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │ Supabase Storage│
+                    └─────────────────┘
+```
 
 | Layer | Technology |
 | :--- | :--- |
-| **Frontend** | Next.js 14, React 18, Tailwind CSS, Recharts, Fabric.js |
-| **Backend** | Python Flask (REST API), SQLAlchemy |
-| **Database & Cloud** | Supabase (PostgreSQL, Real-time RLS, REST API) |
-| **Client Libraries** | `@supabase/supabase-js`, Axios, Lucide React |
+| **Frontend UI** | Next.js 14 (App Router), React 18, Tailwind CSS, Recharts, Fabric.js |
+| **Authentication** | Supabase Auth (`@supabase/ssr`) |
+| **Database** | Supabase PostgreSQL (16 tables) |
+| **Authorization** | PostgreSQL Row Level Security (RLS) |
+| **Storage** | Supabase Storage (`project-screenshots`, `post-media`) |
+| **Services / Client** | Clean TypeScript Service Architecture (`frontend/lib/services/`) |
 
 ---
 
@@ -44,54 +77,44 @@ A comprehensive full-stack platform where candidates submit weekly project progr
 
 ```
 project-review-portal/
-├── frontend/                # Next.js Application
-│   ├── app/                 # App Router Pages (login, dashboard, week, submit, review, grades, admin)
-│   ├── components/          # Reusable UI Components
-│   ├── lib/                 # Axios API Client & Supabase Client (supabase.ts, auth.ts)
-│   └── types/               # TypeScript Interface Definitions
-├── backend/                 # Flask Backend API
-│   ├── routes/              # API Endpoints (auth, weeks, submissions, reviews, grades, projects)
-│   ├── models/              # SQLAlchemy Database Models
-│   ├── utils/               # Supabase Sync Engine (supabase.py), Upload & JWT helpers
-│   ├── middleware/          # Role Verification & Auth Middlewares
-│   └── app.py               # Flask Application Entry Point
-├── database/                # Supabase Database Schema & Migration Scripts
+├── frontend/                # Next.js 14 Application
+│   ├── app/                 # App Router Pages (login, candidate, mentor, admin, review, grades, linkedin)
+│   ├── components/          # Reusable UI & Layout Components
+│   ├── hooks/               # Custom React Hooks (useAuth)
+│   ├── lib/                 # Supabase SSR clients & API Services
+│   │   ├── services/        # Clean Supabase Data Services (auth, profiles, projects, submissions, etc.)
+│   │   └── supabase/        # @supabase/ssr clients (client, server, middleware)
+│   └── types/               # TypeScript Definitions
+├── database/                # Supabase Database Schema & RLS Scripts
 │   └── schema.sql           # Complete Supabase PostgreSQL Schema & RLS Policies
-└── docs/                    # Project Architecture & Design Documentation
+├── supabase/                # Migration Management
+│   └── migrations/          # 001_complete_schema.sql
+└── docs/                    # Project Architecture & Guidelines
 ```
 
 ---
 
 ## ⚙️ Getting Started
 
-### 1. Supabase Database Setup
+### 1. Supabase Setup
 
-1. Open your [Supabase Dashboard](https://supabase.com/dashboard).
-2. Navigate to the **SQL Editor**.
-3. Copy and run the entire [`database/schema.sql`](file:///c:/Users/Dikshitha%20Chiluveru/Desktop/project-review-portal/database/schema.sql) file to set up all tables (`users`, `weeks`, `submissions`, `review_files`, `annotations`, `issues`, `grades`) and Row Level Security (RLS) policies.
+1. Create a project on [Supabase Dashboard](https://supabase.com/dashboard).
+2. Go to the **SQL Editor**.
+3. Execute `supabase/migrations/001_complete_schema.sql` (or `database/schema.sql`) to set up all 16 PostgreSQL tables, indexes, triggers, and RLS policies.
+4. Ensure the following Storage Buckets exist and are set up:
+   - `project-screenshots`
+   - `post-media`
 
-### 2. Backend Setup
+### 2. Frontend Environment Setup
 
-```bash
-cd backend
+Create `frontend/.env.local` (or configure environment variables):
 
-# Create and activate virtual environment
-python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # Linux/macOS
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Create .env file with your credentials
-# SUPABASE_URL=https://<your-project-id>.supabase.co
-# SUPABASE_KEY=<your-supabase-publishable-key>
-
-# Run Flask server
-python app.py                # Runs on http://localhost:5000
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<your-supabase-publishable-key>
 ```
 
-### 3. Frontend Setup
+### 3. Install & Run
 
 ```bash
 cd frontend
@@ -99,14 +122,11 @@ cd frontend
 # Install dependencies
 npm install
 
-# Create .env.local file with your credentials
-# NEXT_PUBLIC_SUPABASE_URL=https://<your-project-id>.supabase.co
-# NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-publishable-key>
-# NEXT_PUBLIC_API_URL=http://localhost:5000/api
-
-# Run Next.js development server
-npm run dev                  # Runs on http://localhost:3000
+# Run Next.js dev server
+npm run dev
 ```
+
+Visit `http://localhost:3000` in your browser.
 
 ---
 
@@ -128,15 +148,3 @@ npm run dev                  # Runs on http://localhost:3000
 - `70 - 79` → **B**
 - `60 - 69` → **C**
 - `< 60` → **Needs Improvement**
-
----
-
-## 📚 Documentation
-
-For full architectural details, see the `/docs` folder:
-- [01_Project_Overview.md](docs/01_Project_Overview.md)
-- [02_User_Flow.md](docs/02_User_Flow.md)
-- [03_Database.md](docs/03_Database.md)
-- [04_API.md](docs/04_API.md)
-- [05_UI_Pages.md](docs/05_UI_Pages.md)
-- [06_Features.md](docs/06_Features.md)

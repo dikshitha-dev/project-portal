@@ -13,6 +13,7 @@ import {
   PostSubmission,
   User,
 } from "@/lib/api";
+import { authService } from "@/lib/services/auth";
 import {
   Linkedin,
   CheckCircle2,
@@ -69,12 +70,9 @@ export default function AdminLinkedInReviewPage() {
   }, [statusFilter]);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored) setCurrentUser(JSON.parse(stored));
-    } catch (e) {
-      console.error(e);
-    }
+    authService.getMe().then(({ user }) => {
+      if (user) setCurrentUser(user);
+    }).catch(() => {});
     fetchSubmissions();
   }, [fetchSubmissions]);
 

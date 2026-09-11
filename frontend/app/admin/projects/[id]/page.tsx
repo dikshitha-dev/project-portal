@@ -20,6 +20,7 @@ import {
   weeksAPI,
   User,
 } from "@/lib/api";
+import { authService } from "@/lib/services/auth";
 import {
   ArrowLeft,
   Calendar,
@@ -103,16 +104,11 @@ export default function ProjectDetailsPage() {
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState<string | null>(null);
 
-  // Current user from local storage
+  // Current user
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        setCurrentUser(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    authService.getMe().then(({ user }) => {
+      if (user) setCurrentUser(user);
+    }).catch(() => {});
   }, []);
 
   // Fetch Project & Weeks

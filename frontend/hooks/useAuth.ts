@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { User } from "@/types";
 import { supabase } from "@/lib/supabase/client";
-import { setStoredUser, getStoredUser } from "@/lib/auth";
 
 interface UseAuthReturn {
   user: User | null;
@@ -23,7 +22,7 @@ export function useAuth(): UseAuthReturn {
         .eq("id", userId)
         .single();
 
-      const updatedUser: User = {
+      const currentUser: User = {
         id: userId,
         name: profile?.name || email?.split("@")[0] || "User",
         email: profile?.email || email || "",
@@ -32,12 +31,9 @@ export function useAuth(): UseAuthReturn {
         created_at: profile?.created_at || new Date().toISOString(),
       };
 
-      setStoredUser(updatedUser);
-      setUser(updatedUser);
+      setUser(currentUser);
     } catch {
-      // Fallback cache if profile query temporary failure
-      const cached = getStoredUser();
-      setUser(cached);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -58,11 +54,6 @@ export function useAuth(): UseAuthReturn {
   }, [fetchProfile]);
 
   useEffect(() => {
-    const cached = getStoredUser();
-    if (cached) {
-      setUser(cached);
-    }
-
     refresh();
 
     const {
