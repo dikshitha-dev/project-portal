@@ -17,6 +17,7 @@ export const ROUTES = {
   // Admin portal
   ADMIN_DASHBOARD: "/admin",
   ADMIN_PROJECTS: "/admin/projects",
+  ADMIN_REQUESTS: "/admin/requests",
   ADMIN_WEEK: "/admin/week",
   ADMIN_LINKEDIN: "/admin/linkedin",
   CANDIDATES: "/candidates",

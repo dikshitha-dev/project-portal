@@ -100,7 +100,18 @@ export default function CandidateProjectWorkspacePage() {
         projectsAPI.getOne(projectId),
         projectsAPI.getWeeks(projectId),
       ]);
-      setProject(projRes.data.project);
+      const fetchedProject = projRes.data.project;
+      setProject(fetchedProject);
+
+      const { user: u } = await authService.getMe().catch(() => ({ user: null }));
+      
+      // Strict Route Protection: Candidates can only open workspace if approved
+      if (u && u.role !== "admin") {
+        if (!fetchedProject.membership_status || fetchedProject.membership_status !== "approved") {
+          router.push("/candidate/dashboard?locked=true");
+          return;
+        }
+      }
 
       const sortedWeeks = (weeksRes.data.weeks || []).sort(
         (a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
@@ -118,7 +129,6 @@ export default function CandidateProjectWorkspacePage() {
       setWeeks(finalWeeks);
 
       // Fetch candidate submissions and grades for this project
-      const { user: u } = await authService.getMe().catch(() => ({ user: null }));
       if (u?.id) {
         const [subsRes, gradesRes, issuesRes] = await Promise.all([
           submissionsAPI.getByCandidate(u.id, projectId),
@@ -135,7 +145,7 @@ export default function CandidateProjectWorkspacePage() {
       if (resp?.status === 403) {
         setAccessDenied({
           status: resp.data?.status || "denied",
-          message: resp.data?.error || "Access Denied. You are not an approved member of this project.",
+          message: resp.data?.error || "This project requires mentor approval before you can access submissions and deliverables.",
         });
       } else {
         console.error("Failed to load project workspace:", err);
@@ -212,15 +222,13 @@ export default function CandidateProjectWorkspacePage() {
                 <Lock size={30} />
               </div>
               <h2 className="text-xl font-bold text-gray-900 mb-2">
-                {accessDenied.status === "pending"
-                  ? "Membership Pending Approval"
-                  : "Private Project Access Denied"}
+                Workspace Locked
               </h2>
               <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-                {accessDenied.message}
+                This project requires mentor approval before you can access submissions and deliverables.
               </p>
               <button
-                onClick={() => router.push("/dashboard")}
+                onClick={() => router.push("/candidate/dashboard?locked=true")}
                 className="btn-primary w-full py-2.5 rounded-xl text-sm font-semibold shadow-glow flex items-center justify-center gap-2"
               >
                 <ArrowLeft size={16} />

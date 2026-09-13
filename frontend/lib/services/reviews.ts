@@ -88,9 +88,11 @@ export const reviewsService = {
     // Join review_files -> annotations -> issues
     const { data: rFiles } = await supabase.from("review_files").select("id").eq("submission_id", submissionId);
     const rfIds = (rFiles || []).map((rf) => rf.id);
+    if (rfIds.length === 0) return { issues: [] };
 
     const { data: anns } = await supabase.from("annotations").select("id").in("image_id", rfIds);
     const annIds = (anns || []).map((a) => a.id);
+    if (annIds.length === 0) return { issues: [] };
 
     const { data: issues, error } = await supabase.from("issues").select("*").in("annotation_id", annIds);
     if (error) throw error;
@@ -101,12 +103,15 @@ export const reviewsService = {
   async getIssuesByCandidate(candidateId: string): Promise<{ issues: Issue[] }> {
     const { data: subs } = await supabase.from("submissions").select("id").eq("user_id", candidateId);
     const subIds = (subs || []).map((s) => s.id);
+    if (subIds.length === 0) return { issues: [] };
 
     const { data: rFiles } = await supabase.from("review_files").select("id").in("submission_id", subIds);
     const rfIds = (rFiles || []).map((rf) => rf.id);
+    if (rfIds.length === 0) return { issues: [] };
 
     const { data: anns } = await supabase.from("annotations").select("id").in("image_id", rfIds);
     const annIds = (anns || []).map((a) => a.id);
+    if (annIds.length === 0) return { issues: [] };
 
     const { data: issues, error } = await supabase.from("issues").select("*").in("annotation_id", annIds);
     if (error) throw error;

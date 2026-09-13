@@ -242,7 +242,7 @@ export default function ReviewPage() {
 
         if (typeof window !== "undefined") {
           const params = new URLSearchParams(window.location.search);
-          const subId = params.get("submission");
+          const subId = params.get("submission") || params.get("submissionId");
           const candId = params.get("candidate");
 
           if (subId) {

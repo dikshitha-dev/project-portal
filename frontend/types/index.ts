@@ -57,7 +57,13 @@ export interface ProjectMember {
   id: string;
   project_id: string;
   user_id: string;
+  candidate_id?: string;
   role: "owner" | "member";
+  status?: "pending" | "approved" | "rejected" | string;
+  joined_via?: "public" | "invite" | string;
+  requested_at?: string;
+  approved_at?: string;
+  approved_by?: string;
   created_at?: string;
   user?: User;
 }
@@ -67,9 +73,14 @@ export interface ProjectJoinRequest {
   project_id: string;
   project_name?: string;
   user_id: string;
-  status: "pending" | "approved" | "accepted" | "rejected" | "cancelled";
+  candidate_id?: string;
+  status: "pending" | "approved" | "accepted" | "rejected" | "cancelled" | string;
+  joined_via?: "public" | "invite" | string;
   feedback?: string | null;
   reviewed_at?: string | null;
+  requested_at?: string;
+  approved_at?: string;
+  approved_by?: string;
   created_at?: string;
   user?: User;
 }

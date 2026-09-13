@@ -97,16 +97,22 @@ export const gradesService = {
   },
 
   async getCandidateGrades(candidateId: string, projectId?: string): Promise<{ grades: Grade[] }> {
-    let query = supabase
-      .from("grades")
-      .select("*, submission:submissions!inner(*, week:weeks!inner(*))")
-      .eq("submission.user_id", candidateId);
-
+    let subQuery = supabase.from("submissions").select("id").eq("user_id", candidateId);
     if (projectId) {
-      query = query.eq("submission.week.project_id", projectId);
+      const { data: weekIds } = await supabase.from("weeks").select("id").eq("project_id", projectId);
+      const ids = (weekIds || []).map((w) => w.id);
+      if (ids.length === 0) return { grades: [] };
+      subQuery = subQuery.in("week_id", ids);
     }
+    const { data: subs, error: subErr } = await subQuery;
+    if (subErr || !subs || subs.length === 0) return { grades: [] };
 
-    const { data, error } = await query;
+    const subIds = subs.map((s) => s.id);
+    const { data, error } = await supabase
+      .from("grades")
+      .select("*, submission:submissions(*, week:weeks(*), user:profiles(*))")
+      .in("submission_id", subIds);
+
     if (error) throw error;
     return { grades: (data || []) as unknown as Grade[] };
   },

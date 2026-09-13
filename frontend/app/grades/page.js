@@ -63,9 +63,30 @@ export default function GradesPage() {
             submissionsAPI.getAll(),
             authAPI.getCandidates(),
           ]);
-          setAllGrades(gradesRes.data.grades);
-          setSubmissions(subsRes.data.submissions);
-          setCandidates(candsRes.data.candidates);
+          const fetchedGrades = gradesRes.data.grades || [];
+          const fetchedSubs = subsRes.data.submissions || [];
+          setAllGrades(fetchedGrades);
+          setSubmissions(fetchedSubs);
+          setCandidates(candsRes.data.candidates || []);
+
+          if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search);
+            const targetId = params.get("submissionId") || params.get("submission");
+            if (targetId) {
+              const matched = fetchedSubs.find((s) => s.id === targetId);
+              if (matched) {
+                setSelectedSubmission(matched);
+                const existing = fetchedGrades.find((g) => g.submission_id === targetId);
+                if (existing) {
+                  setRubric({
+                    ui: existing.ui, functionality: existing.functionality, github: existing.github,
+                    documentation: existing.documentation, innovation: existing.innovation, weekly_progress: existing.weekly_progress,
+                  });
+                  setPublished(existing.published);
+                }
+              }
+            }
+          }
         }
       } catch (err) {
         console.error("Failed to load grades:", err);

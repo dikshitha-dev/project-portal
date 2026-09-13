@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Linkedin,
+  Clock,
 } from "lucide-react";
 
 // ─── Navigation Config ────────────────────────────────────────────────────────
@@ -37,11 +38,12 @@ const CANDIDATE_LINKS: NavLink[] = [
 
 const ADMIN_LINKS: NavLink[] = [
   { href: ROUTES.ADMIN_DASHBOARD, label: "Dashboard", icon: LayoutDashboard },
-  { href: ROUTES.ADMIN_PROJECTS, label: "Projects", icon: Calendar },
+  { href: ROUTES.ADMIN_REQUESTS, label: "Join Requests", icon: Clock },
+  { href: ROUTES.REVIEW, label: "Project Reviews", icon: ClipboardList },
+  { href: ROUTES.ADMIN_LINKEDIN, label: "LinkedIn Reviews", icon: Linkedin },
+  { href: ROUTES.GRADES, label: "Grade Management", icon: BarChart3 },
   { href: ROUTES.CANDIDATES, label: "Candidates", icon: Users },
-  { href: ROUTES.ADMIN_LINKEDIN, label: "LinkedIn Review", icon: Linkedin },
-  { href: ROUTES.REVIEW, label: "Review Work", icon: ClipboardList },
-  { href: ROUTES.GRADES, label: "Grades", icon: BarChart3 },
+  { href: ROUTES.ADMIN_PROJECTS, label: "Assign Project", icon: Calendar },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -73,7 +75,10 @@ export default function Sidebar() {
         <nav className="space-y-1" aria-label="Main navigation">
           {links.map((link, index) => {
             const Icon = link.icon;
-            const isActive = pathname === link.href;
+            const isActive =
+              pathname === link.href ||
+              (link.href === "/dashboard" && pathname === "/candidate/dashboard") ||
+              (link.href === "/admin" && pathname === "/admin/dashboard");
             return (
               <motion.div
                 key={link.href}

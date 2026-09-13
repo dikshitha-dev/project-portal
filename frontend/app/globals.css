@@ -213,7 +213,7 @@ select:not(.input-glass):focus {
   .brand-screen::before {
     content: '';
     @apply absolute inset-0 pointer-events-none;
-    background: 
+    background:
       radial-gradient(circle 800px at 15% 20%, rgba(124, 77, 255, 0.22), transparent 70%),
       radial-gradient(circle 700px at 85% 75%, rgba(77, 163, 255, 0.18), transparent 70%),
       radial-gradient(circle 600px at 50% 50%, rgba(34, 211, 238, 0.12), transparent 70%),
@@ -223,7 +223,7 @@ select:not(.input-glass):focus {
   .brand-screen::after {
     content: '';
     @apply absolute inset-0 opacity-40 pointer-events-none;
-    background-image: 
+    background-image:
       radial-gradient(1.5px 1.5px at 30px 40px, rgba(255, 255, 255, 0.6), transparent),
       radial-gradient(1px 1px at 80px 120px, rgba(34, 211, 238, 0.7), transparent),
       radial-gradient(1.5px 1.5px at 150px 70px, rgba(255, 255, 255, 0.5), transparent),
@@ -348,15 +348,35 @@ select:not(.input-glass):focus {
   }
 
   @keyframes floating {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    25% { transform: translateY(-8px) rotate(0.7deg); }
-    50% { transform: translateY(-4px) rotate(-0.5deg); }
-    75% { transform: translateY(-10px) rotate(0.4deg); }
+
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+
+    25% {
+      transform: translateY(-8px) rotate(0.7deg);
+    }
+
+    50% {
+      transform: translateY(-4px) rotate(-0.5deg);
+    }
+
+    75% {
+      transform: translateY(-10px) rotate(0.4deg);
+    }
   }
 
   @keyframes glowBreathe {
-    0% { opacity: 0.4; transform: scale(0.97); }
-    100% { opacity: 0.75; transform: scale(1.03); }
+    0% {
+      opacity: 0.4;
+      transform: scale(0.97);
+    }
+
+    100% {
+      opacity: 0.75;
+      transform: scale(1.03);
+    }
   }
 
   .gradient-text {
@@ -371,12 +391,24 @@ select:not(.input-glass):focus {
 }
 
 @keyframes twinkle {
-  0% { opacity: 0.25; transform: scale(0.98); }
-  50% { opacity: 0.65; transform: scale(1.02); }
-  100% { opacity: 0.35; transform: scale(1); }
+  0% {
+    opacity: 0.25;
+    transform: scale(0.98);
+  }
+
+  50% {
+    opacity: 0.65;
+    transform: scale(1.02);
+  }
+
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .floating,
   .floating-delayed,
   .animate-float,
@@ -386,6 +418,7 @@ select:not(.input-glass):focus {
   .brand-screen::after {
     animation: none !important;
   }
+
   * {
     transition-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -393,37 +426,75 @@ select:not(.input-glass):focus {
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(124, 58, 237, 0.2); }
-  50% { box-shadow: 0 0 40px rgba(124, 58, 237, 0.4); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(124, 58, 237, 0.4);
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }

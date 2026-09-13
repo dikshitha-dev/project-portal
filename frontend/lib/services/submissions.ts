@@ -64,6 +64,7 @@ export const submissionsService = {
       // Filter via weeks
       const { data: weekIds } = await supabase.from("weeks").select("id").eq("project_id", projectId);
       const ids = (weekIds || []).map((w) => w.id);
+      if (ids.length === 0) return { submissions: [] };
       query = query.in("week_id", ids);
     }
 
@@ -160,6 +161,7 @@ export const submissionsService = {
     if (projectId) {
       const { data: weekIds } = await supabase.from("weeks").select("id").eq("project_id", projectId);
       const ids = (weekIds || []).map((w) => w.id);
+      if (ids.length === 0) return { submissions: [] };
       query = query.in("week_id", ids);
     }
 

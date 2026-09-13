@@ -2,20 +2,19 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchCurrentUser } from "@/lib/auth";
-import { Role } from "@/lib/auth";
-import { supabase } from "@/lib/supabase/client";
-import { getRoleRedirectUrl } from "@/constants/roles";
+import { fetchCurrentUser, Role } from "@/lib/auth";
 import LoadingSpinner from "./LoadingSpinner";
 
 interface AuthGuardProps {
   children: ReactNode;
-  requiredRole?: Role | null;
+  requiredRole?: Role | Role[] | null;
+  allowAdminOverride?: boolean;
 }
 
 export default function AuthGuard({
   children,
   requiredRole = null,
+  allowAdminOverride = false,
 }: AuthGuardProps) {
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
@@ -23,21 +22,23 @@ export default function AuthGuard({
 
   useEffect(() => {
     const verify = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session?.user) {
-        router.replace("/login");
-        return;
-      }
-
       try {
         const user = await fetchCurrentUser();
-
-        if (requiredRole && user.role !== requiredRole && user.role !== "admin") {
-          router.replace(getRoleRedirectUrl(user.role));
+        if (!user) {
+          router.replace("/login");
           return;
+        }
+
+        if (requiredRole) {
+          const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+          const hasRole =
+            roles.includes(user.role) || (allowAdminOverride && user.role === "admin");
+
+          if (!hasRole) {
+            const redirectUrl = user.role === "admin" ? "/admin/dashboard" : "/candidate/dashboard";
+            router.replace(redirectUrl);
+            return;
+          }
         }
 
         setAuthorized(true);
@@ -49,7 +50,7 @@ export default function AuthGuard({
     };
 
     verify();
-  }, [router, requiredRole]);
+  }, [router, requiredRole, allowAdminOverride]);
 
   if (checking) {
     return (
@@ -60,7 +61,7 @@ export default function AuthGuard({
             "linear-gradient(135deg, rgba(248,247,255,0.8) 0%, rgba(240,238,255,0.6) 50%, rgba(245,243,255,0.8) 100%)",
         }}
       >
-        <LoadingSpinner size="lg" text="Verifying authentication..." />
+        <LoadingSpinner size="lg" text="Verifying authorization..." />
       </div>
     );
   }
